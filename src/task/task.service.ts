@@ -15,9 +15,9 @@ export class TaskService {
         private taskRepository: TaskRepository
     ){ }
     
-    // getAllTask():Task[] {
-    //     return this._tasks;
-    // }
+    getTasks( filterDto: GetTaskFilterDto ): Promise<Task[]> {
+        return this.taskRepository.getTasks(filterDto);
+    }
 
     async getTaskById( id: string ): Promise<Task>{
         const found = await this.taskRepository.findOne(id);
@@ -29,43 +29,28 @@ export class TaskService {
         return found;
     }
 
-    // getFilterTask( getTaskFilterDto: GetTaskFilterDto ): Task[]{
-    //     let task = this._tasks;
-
-    //     if( getTaskFilterDto.status ){
-    //         task = task.filter( task => task.status == getTaskFilterDto.status );
-    //     }
-
-    //     if( getTaskFilterDto.search ){
-    //         task = task.filter( task => {
-    //             if( task.title.includes(getTaskFilterDto.search) || task.description.includes(getTaskFilterDto.search)){
-    //                 return true;
-    //             }
-
-    //             return false;
-    //         });
-    //     }
-
-    //     return task;
-    // }
-
-
     async createTask( createTaskDto: CreateTaskDto ): Promise<Task>{
         return this.taskRepository.createTask(createTaskDto);
     }
 
-    // patchTaskValue(id: string, status: TaskStatus): Task{
-    //     const task = this.getTaskById(id);
+    async patchTaskValue(id: string, status: TaskStatus): Promise<Task>{
+        const task = await this.getTaskById(id);
         
-    //     task.status = status;
-
-    //     return task;
-    // }
-
-    // deleteTaskById( id: string): void {
-
-    //     this.getTaskById(id);
+        task.status = status;
         
-    //     this._tasks = this._tasks.filter( task => task.id !== id );
-    // }
+        await this.taskRepository.save(task);
+
+        return task;
+    }
+
+    async deleteTaskById(id: string): Promise<string> {
+        
+        const result = await this.taskRepository.delete(id);
+
+        if(result.affected === 0){
+            throw new NotFoundException(`no se encontro una actividad con el id ${id}`);
+        }
+
+        return 'Actividad eliminada exitosamente';
+    }
 }
